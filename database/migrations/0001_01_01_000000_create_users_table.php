@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,13 +14,62 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+
+            // Основная информация
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['participant', 'jury', 'admin'])->default('participant');
             $table->rememberToken();
+
+            // Роль пользователя (participant, jury, admin)
+            $table->enum('role', [
+                User::ROLE_PARTICIPANT,
+                User::ROLE_JURY,
+                User::ROLE_ADMIN
+            ])->default(User::ROLE_PARTICIPANT);
+
+            // Информация о последнем входе
+            $table->timestamp('last_login_at')->nullable();
+            $table->string('last_login_ip')->nullable();
+            $table->text('user_agent')->nullable();
+
+            // Блокировка пользователя
+            $table->boolean('is_blocked')->default(false);
+            $table->timestamp('blocked_at')->nullable();
+            $table->text('block_reason')->nullable();
+            $table->foreignId('blocked_by')->nullable()->constrained('users')->nullOnDelete();
+
+            // Настройки уведомлений (JSON)
+            $table->json('notification_settings')->nullable();
+
+            // Дополнительная информация
+            $table->string('phone')->nullable();
+            $table->string('organization')->nullable();
+            $table->string('position')->nullable();
+            $table->text('bio')->nullable();
+            $table->string('avatar')->nullable();
+
+            // Двухфакторная аутентификация (опционально)
+            $table->text('two_factor_secret')->nullable();
+            $table->text('two_factor_recovery_codes')->nullable();
+            $table->timestamp('two_factor_confirmed_at')->nullable();
+
+            // Язык и регион
+            $table->string('locale')->default('ru');
+            $table->string('timezone')->default('Europe/Moscow');
+
+            // Мягкое удаление (опционально)
+            $table->softDeletes();
+
             $table->timestamps();
+
+            // Индексы для ускорения поиска
+            $table->index('role');
+            $table->index('is_blocked');
+            $table->index('last_login_at');
+            $table->index('created_at');
+            $table->index(['email', 'role']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -46,43 +96,5 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
-    }
-
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
-
-    public function submissions()
-    {
-        return $this->hasMany(Submission::class);
-    }
-
-    public function comments()
-    {
-        return $this->hasMany(SubmissionComment::class);
-    }
-
-    public function attachments()
-    {
-        return $this->hasMany(Attachment::class);
-    }
-
-    public function isParticipant(): bool
-    {
-        return $this->role === 'participant';
-    }
-
-    public function isJury(): bool
-    {
-        return $this->role === 'jury';
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
     }
 };
