@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->enum('role', ['participant', 'jury', 'admin'])->default('participant');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -45,5 +46,43 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(SubmissionComment::class);
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
+    public function isParticipant(): bool
+    {
+        return $this->role === 'participant';
+    }
+
+    public function isJury(): bool
+    {
+        return $this->role === 'jury';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 };
