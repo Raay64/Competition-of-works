@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Attachment;
 use App\Models\Submission;
 use App\Services\AttachmentService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class AttachmentController extends Controller
@@ -18,8 +17,15 @@ class AttachmentController extends Controller
         $this->attachmentService = $attachmentService;
     }
 
-    public function upload(Request $request, Submission $submission): JsonResponse
+    /**
+     * Загрузка файла
+     */
+    public function upload(Request $request, Submission $submission)
     {
+        $request->validate([
+            'file' => 'required|file|max:10240|mimes:pdf,zip,png,jpg,jpeg'
+        ]);
+
         try {
             $attachment = $this->attachmentService->upload(
                 $submission,
@@ -27,20 +33,88 @@ class AttachmentController extends Controller
                 $request->file('file')
             );
 
-            return response()->json($attachment, 201);
+            return redirect()->back()->with('success', 'Файл успешно загружен');
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            return redirect()->back()->with('error', 'Ошибка загрузки: ' . $e->getMessage());
         }
     }
 
-    public function download(Attachment $attachment): JsonResponse
+    /**
+     * Скачивание файла
+     */
+    public function download(Attachment $attachment)
     {
         try {
+            $user = Auth::user();
+
+            // Проверка доступа
+            if ($user->isParticipant() && $attachment->submission->user_id !== $user->id) {
+                abort(403, 'Доступ запрещен');
+            }
+
             $url = $this->attachmentService->getSignedUrl($attachment);
 
-            return response()->json(['url' => $url]);
+            // Редирект на временную ссылку S3
+            return redirect()->away($url);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 403);
+            return redirect()->back()->with('error', 'Ошибка: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Удаление файла
+     */
+    public function destroy(Attachment $attachment)
+    {
+        try {
+            $submission = $attachment->submission;
+            $user = Auth::user();
+
+            // Проверяем права на удаление
+            if ($submission->user_id !== $user->id && !$user->isAdmin()) {
+                abort(403, 'Доступ запрещен');
+            }
+
+            // Проверяем, можно ли редактировать работу
+            if (!$submission->canBeEdited()) {
+                return redirect()->back()->with('error', 'Нельзя удалить файл в текущем статусе работы');
+            }
+
+            $this->attachmentService->delete($attachment);
+
+            return redirect()->back()->with('success', 'Файл успешно удален');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Ошибка удаления: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Превью файла (для изображений и PDF)
+     */
+    public function preview(Attachment $attachment)
+    {
+        try {
+            $user = Auth::user();
+
+            // Проверка доступа
+            if ($user->isParticipant() && $attachment->submission->user_id !== $user->id) {
+                abort(403, 'Доступ запрещен');
+            }
+
+            $url = $this->attachmentService->getSignedUrl($attachment);
+
+            // Для изображений и PDF показываем в браузере
+            if (strpos($attachment->mime, 'image/') === 0 || $attachment->mime === 'application/pdf') {
+                return redirect()->away($url);
+            }
+
+            // Для остальных типов - скачивание
+            return redirect()->route('attachments.download', $attachment);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Ошибка: ' . $e->getMessage());
         }
     }
 }
