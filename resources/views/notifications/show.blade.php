@@ -79,15 +79,21 @@
                         </div>
                     @endif
 
-                    @if(isset($data['contest_title']))
-                        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
-                            <i class="fas fa-trophy text-yellow-500 w-6"></i>
-                            <span class="text-sm text-gray-600">Конкурс:</span>
-                            <a href="{{ route('contests.show', $data['contest_id']) }}" class="ml-2 text-indigo-600 hover:text-indigo-800">
-                                {{ $data['contest_title'] }}
-                            </a>
-                        </div>
-                    @endif
+                        @if(isset($data['contest_title']) && isset($data['contest_id']))
+                            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                <i class="fas fa-trophy text-yellow-500 w-6"></i>
+                                <span class="text-sm text-gray-600">Конкурс:</span>
+                                <a href="{{ route('contests.show', $data['contest_id']) }}" class="ml-2 text-indigo-600 hover:text-indigo-800">
+                                    {{ $data['contest_title'] }}
+                                </a>
+                            </div>
+                        @elseif(isset($data['contest_title']))
+                            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                <i class="fas fa-trophy text-yellow-500 w-6"></i>
+                                <span class="text-sm text-gray-600">Конкурс:</span>
+                                <span class="ml-2 font-medium">{{ $data['contest_title'] }}</span>
+                            </div>
+                        @endif
 
                     @if(isset($data['commenter_name']))
                         <div class="flex items-center p-3 bg-gray-50 rounded-lg">
