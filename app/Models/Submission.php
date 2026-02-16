@@ -175,4 +175,20 @@ class Submission extends Model
     {
         return $this->status === self::STATUS_NEEDS_FIX;
     }
+
+    /**
+     * Check if can upload more files
+     */
+    public function canUploadMoreFiles(): bool
+    {
+        return $this->canBeEdited() && $this->attachments()->count() < 3;
+    }
+
+    /**
+     * Get max files count
+     */
+    public function getMaxFilesCount(): int
+    {
+        return 3;
+    }
 }

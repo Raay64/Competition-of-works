@@ -177,6 +177,25 @@ class SubmissionController extends Controller
         ));
     }
 
+    public function upload(Request $request, Submission $submission)
+    {
+        $request->validate([
+            'file' => 'required|file|max:10240|mimes:pdf,zip,png,jpg,jpeg'
+        ]);
+
+        try {
+            $attachment = $this->attachmentService->upload(
+                $request->file('file'),
+                $submission,
+                Auth::user()
+            );
+
+            return redirect()->back()->with('success', 'Файл успешно загружен');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Ошибка загрузки: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Show the form for editing the specified resource.
      */

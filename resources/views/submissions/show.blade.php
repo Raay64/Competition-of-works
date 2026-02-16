@@ -168,8 +168,14 @@
                                 <div class="text-center">
                                     <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
                                     <p class="text-sm text-gray-600 mb-2">Перетащите файлы или нажмите для выбора</p>
-                                    <input type="file" name="file" id="file" class="hidden" accept=".pdf,.zip,.png,.jpg,.jpeg">
-                                    <button type="button" onclick="document.getElementById('file').click()"
+                                    <input type="file"
+                                           name="file"
+                                           id="file"
+                                           class="hidden"
+                                           accept=".pdf,.zip,.png,.jpg,.jpeg"
+                                           onchange="document.getElementById('uploadForm').submit()">
+                                    <button type="button"
+                                            onclick="document.getElementById('file').click()"
                                             class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                                         <i class="fas fa-upload mr-2"></i>
                                         Выбрать файл

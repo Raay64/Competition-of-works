@@ -61,8 +61,6 @@ class ContestController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', Contest::class);
-
         return view('contests.form');
     }
 
@@ -71,8 +69,6 @@ class ContestController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create', Contest::class);
-
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -129,8 +125,6 @@ class ContestController extends Controller
      */
     public function edit(Contest $contest)
     {
-        $this->authorize('update', $contest);
-
         return view('contests.form', compact('contest'));
     }
 
@@ -139,8 +133,6 @@ class ContestController extends Controller
      */
     public function update(Request $request, Contest $contest)
     {
-        $this->authorize('update', $contest);
-
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -159,8 +151,6 @@ class ContestController extends Controller
      */
     public function destroy(Contest $contest)
     {
-        $this->authorize('delete', $contest);
-
         if ($contest->submissions()->exists()) {
             return back()->with('error', 'Нельзя удалить конкурс, в котором есть работы');
         }

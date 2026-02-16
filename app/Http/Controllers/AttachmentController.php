@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UploadAttachmentRequest;
+use Illuminate\Http\Request;
 use App\Models\Attachment;
 use App\Models\Submission;
 use App\Services\AttachmentService;
@@ -18,7 +18,7 @@ class AttachmentController extends Controller
         $this->attachmentService = $attachmentService;
     }
 
-    public function upload(UploadAttachmentRequest $request, Submission $submission): JsonResponse
+    public function upload(Request $request, Submission $submission): JsonResponse
     {
         try {
             $attachment = $this->attachmentService->upload(
