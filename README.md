@@ -11,21 +11,21 @@
 4. Потом заходим в .env и меняем сначала localhost на порт 8000, т.е. "APP_URL=http://localhost:8000". Данные от сервера s3, т.е.:
 FILESYSTEM_DISK меняем с локал на s3, чтобы получилось: FILESYSTEM_DISK=s3
 Далее, спускаемся ниже и видим это: 
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=
-AWS_USE_PATH_STYLE_ENDPOINT=false
+### AWS_ACCESS_KEY_ID=
+### AWS_SECRET_ACCESS_KEY=
+### AWS_DEFAULT_REGION=us-east-1
+### AWS_BUCKET=
+### AWS_USE_PATH_STYLE_ENDPOINT=false
 
 меняем это все на это:
 
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_DEFAULT_REGION=
-AWS_BUCKET=
-AWS_URL=
-AWS_ENDPOINT=
-AWS_USE_PATH_STYLE_ENDPOINT=true
+### AWS_ACCESS_KEY_ID=
+### AWS_SECRET_ACCESS_KEY=
+### AWS_DEFAULT_REGION=
+### AWS_BUCKET=
+### AWS_URL=
+### AWS_ENDPOINT=
+### AWS_USE_PATH_STYLE_ENDPOINT=true
 
 И заполняем данные, которые были в том самом загадочном ворд-файле.
 
