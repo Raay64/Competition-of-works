@@ -40,7 +40,6 @@ AWS_USE_PATH_STYLE_ENDPOINT=true</br>
 1. cd 'путь'
 2. php artisan queue:work
 И все держим открытым до конца и проверяем работу.
-<<<<<<< HEAD
 
 Тестовые юзеры:</br>
 Админ - tech@contest.ru ; пароль - password</br>
@@ -49,6 +48,4 @@ AWS_USE_PATH_STYLE_ENDPOINT=true</br>
 Пользователь 2 - dmitry.smirnov@example.com ; пароль - password</br>
 Пользователь 3 - maxim.kuznetsov@example.com ; пароль - password</br>
 
-=======
->>>>>>> parent of 4408263 (Update README.md)
 P.S. Если будут проблемы с S3, можно попробовать решить это тем, что пересоздать папку storage. Делитаем её, и php artisan storage:link (все равно потом будет загружаться на s3)
