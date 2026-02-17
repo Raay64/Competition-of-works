@@ -85,31 +85,6 @@
             </p>
         </div>
     </div>
-
-    <!-- Тестовые учетные данные -->
-    <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
-        <h3 class="text-sm font-medium text-gray-700 mb-4 flex items-center">
-            <i class="fas fa-info-circle text-indigo-500 mr-2"></i>
-            Тестовые учетные данные
-        </h3>
-        <div class="space-y-3 text-sm">
-            <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-gray-600">Участник:</span>
-                <span class="font-mono text-indigo-600">participant@example.com</span>
-                <span class="text-gray-500">password</span>
-            </div>
-            <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-gray-600">Жюри:</span>
-                <span class="font-mono text-indigo-600">jury@example.com</span>
-                <span class="text-gray-500">password</span>
-            </div>
-            <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-gray-600">Админ:</span>
-                <span class="font-mono text-indigo-600">admin@example.com</span>
-                <span class="text-gray-500">password</span>
-            </div>
-        </div>
-    </div>
 </div>
 </body>
 </html>
