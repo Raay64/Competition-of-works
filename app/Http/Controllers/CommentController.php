@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Submission;
 use App\Models\SubmissionComment;
 use App\Services\SubmissionService;
+use App\Http\Requests\Comment\StoreCommentRequest;
+use App\Http\Requests\Comment\UpdateCommentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,30 +22,13 @@ class CommentController extends Controller
     /**
      * Сохранить новый комментарий
      */
-    public function store(Request $request, Submission $submission)
+    public function store(StoreCommentRequest $request, Submission $submission)
     {
-        $user = Auth::user();
-
-        // Проверка доступа
-        if ($user->isParticipant() && $submission->user_id !== $user->id) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Вы не можете комментировать эту работу'
-                ], 403);
-            }
-            abort(403, 'Вы не можете комментировать эту работу');
-        }
-
-        $data = $request->validate([
-            'body' => 'required|string|max:5000',
-        ]);
-
         try {
             $comment = $this->submissionService->addComment(
                 $submission,
-                $user,
-                $data['body']
+                Auth::user(),
+                $request->validated()['body']
             );
 
             if ($request->wantsJson()) {
@@ -74,38 +59,9 @@ class CommentController extends Controller
     /**
      * Обновить комментарий
      */
-    public function update(Request $request, SubmissionComment $comment)
+    public function update(UpdateCommentRequest $request, SubmissionComment $comment)
     {
-        $user = Auth::user();
-
-        // Только автор комментария или админ могут редактировать
-        if ($user->id !== $comment->user_id && !$user->isAdmin()) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'У вас нет прав на редактирование этого комментария'
-                ], 403);
-            }
-            abort(403);
-        }
-
-        // Нельзя редактировать комментарии старше 1 часа (опционально)
-        if ($comment->created_at->diffInHours(now()) > 1 && !$user->isAdmin()) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Нельзя редактировать комментарии старше 1 часа'
-                ], 403);
-            }
-            return redirect()->back()
-                ->with('error', 'Нельзя редактировать комментарии старше 1 часа');
-        }
-
-        $data = $request->validate([
-            'body' => 'required|string|max:5000',
-        ]);
-
-        $comment->update($data);
+        $comment->update($request->validated());
 
         if ($request->wantsJson()) {
             return response()->json([

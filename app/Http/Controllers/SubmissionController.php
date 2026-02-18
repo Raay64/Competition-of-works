@@ -7,6 +7,10 @@ use App\Models\Contest;
 use App\Models\User;
 use App\Services\SubmissionService;
 use App\Services\AttachmentService;
+use App\Http\Requests\Submission\StoreSubmissionRequest;
+use App\Http\Requests\Submission\UpdateSubmissionRequest;
+use App\Http\Requests\Submission\ChangeStatusRequest;
+use App\Http\Requests\Submission\UploadFileRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -98,16 +102,10 @@ class SubmissionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreSubmissionRequest $request)
     {
-        $request->validate([
-            'contest_id' => 'required|exists:contests,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
         try {
-            $submission = $this->submissionService->create($request->all(), Auth::user());
+            $submission = $this->submissionService->create($request->validated(), Auth::user());
 
             return redirect()->route('submissions.show', $submission)
                 ->with('success', 'Черновик работы успешно создан');
@@ -177,25 +175,6 @@ class SubmissionController extends Controller
         ));
     }
 
-    public function upload(Request $request, Submission $submission)
-    {
-        $request->validate([
-            'file' => 'required|file|max:10240|mimes:pdf,zip,png,jpg,jpeg'
-        ]);
-
-        try {
-            $attachment = $this->attachmentService->upload(
-                $request->file('file'),
-                $submission,
-                Auth::user()
-            );
-
-            return redirect()->back()->with('success', 'Файл успешно загружен');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Ошибка загрузки: ' . $e->getMessage());
-        }
-    }
-
     /**
      * Show the form for editing the specified resource.
      */
@@ -218,21 +197,10 @@ class SubmissionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Submission $submission)
+    public function update(UpdateSubmissionRequest $request, Submission $submission)
     {
-        $user = Auth::user();
-
-        if ($submission->user_id !== $user->id) {
-            abort(403);
-        }
-
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
         try {
-            $this->submissionService->update($submission, $request->all());
+            $this->submissionService->update($submission, $request->validated());
 
             return redirect()->route('submissions.show', $submission)
                 ->with('success', 'Работа успешно обновлена');
@@ -265,31 +233,8 @@ class SubmissionController extends Controller
     /**
      * Change submission status (for jury)
      */
-    public function changeStatus(Request $request, Submission $submission)
+    public function changeStatus(ChangeStatusRequest $request, Submission $submission)
     {
-        $user = Auth::user();
-
-        if (!$user->isJury() && !$user->isAdmin()) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'У вас нет прав для изменения статуса'
-                ], 403);
-            }
-            abort(403);
-        }
-
-        $request->validate([
-            'status' => 'required|in:submitted,needs_fix,accepted,rejected',
-            'comment' => 'nullable|string|max:5000',
-        ]);
-
-        // Проверяем, допустим ли такой переход
-        if (!$submission->canJurySetStatus($request->status)) {
-            return back()->with('error', 'Недопустимый переход статуса')
-                ->withInput();
-        }
-
         try {
             $this->submissionService->changeStatus($submission, $request->status);
 
@@ -297,7 +242,7 @@ class SubmissionController extends Controller
             if ($request->filled('comment')) {
                 $this->submissionService->addComment(
                     $submission,
-                    $user,
+                    Auth::user(),
                     $request->comment
                 );
             }

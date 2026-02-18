@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Contest;
 use App\Models\Submission;
+use App\Http\Requests\Contest\StoreContestRequest;
+use App\Http\Requests\Contest\UpdateContestRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -67,16 +69,9 @@ class ContestController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreContestRequest $request)
     {
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'deadline_at' => 'required|date|after:today',
-            'is_active' => 'boolean',
-        ]);
-
-        $contest = Contest::create($data);
+        $contest = Contest::create($request->validated());
 
         return redirect()->route('contests.show', $contest)
             ->with('success', 'Конкурс успешно создан');
@@ -95,14 +90,14 @@ class ContestController extends Controller
                 ->with('user')
                 ->withCount('attachments')
                 ->latest()
-                ->paginate(20); // Используем paginate() вместо get()
+                ->paginate(20);
         } else {
             // Участник видит только свои работы
             $submissions = $contest->submissions()
                 ->where('user_id', $user->id)
                 ->withCount('attachments')
                 ->latest()
-                ->paginate(20); // Используем paginate() вместо get()
+                ->paginate(20);
         }
 
         // Статистика по конкурсу
@@ -131,16 +126,9 @@ class ContestController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Contest $contest)
+    public function update(UpdateContestRequest $request, Contest $contest)
     {
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'deadline_at' => 'required|date',
-            'is_active' => 'boolean',
-        ]);
-
-        $contest->update($data);
+        $contest->update($request->validated());
 
         return redirect()->route('contests.show', $contest)
             ->with('success', 'Конкурс успешно обновлен');

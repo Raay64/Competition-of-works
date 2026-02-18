@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Attachment\UploadAttachmentRequest;
 use Illuminate\Http\Request;
 use App\Models\Attachment;
 use App\Models\Submission;
@@ -20,12 +21,8 @@ class AttachmentController extends Controller
     /**
      * Загрузка файла
      */
-    public function upload(Request $request, Submission $submission)
+    public function upload(UploadAttachmentRequest $request, Submission $submission)
     {
-        $request->validate([
-            'file' => 'required|file|max:10240|mimes:pdf,zip,png,jpg,jpeg'
-        ]);
-
         try {
             $attachment = $this->attachmentService->upload(
                 $submission,

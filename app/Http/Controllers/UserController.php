@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Http\Requests\User\StoreUserRequest;
+use App\Http\Requests\User\UpdateUserRequest;
+use App\Http\Requests\User\ChangeRoleRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -63,15 +66,9 @@ class UserController extends Controller
     /**
      * Сохранение нового пользователя (только админ)
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:participant,jury,admin',
-        ]);
-
+        $data = $request->validated();
         $data['password'] = Hash::make($data['password']);
 
         $user = User::create($data);
@@ -124,42 +121,12 @@ class UserController extends Controller
     /**
      * Обновление пользователя
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        // Пользователь может редактировать свой профиль, админ - любой
-        if (Auth::id() !== $user->id && !Auth::user()->isAdmin()) {
-            abort(403);
-        }
+        $data = $request->validated();
 
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-        ];
-
-        // Только админ может менять роль
-        if (Auth::user()->isAdmin()) {
-            $rules['role'] = 'required|in:participant,jury,admin';
-        }
-
-        // Пароль может менять кто угодно (для своего профиля)
-        if ($request->filled('password')) {
-            $rules['password'] = 'string|min:8|confirmed';
-            $rules['current_password'] = 'required_with:password|string';
-        }
-
-        $data = $request->validate($rules);
-
-        // Проверка текущего пароля при смене пароля
-        if ($request->filled('password')) {
-            if (!Hash::check($request->current_password, $user->password)) {
-                return back()->withErrors(['current_password' => 'Текущий пароль неверен']);
-            }
+        if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
-        }
-
-        // Если это не админ, оставляем старую роль
-        if (!Auth::user()->isAdmin()) {
-            $data['role'] = $user->role;
         }
 
         $user->update($data);
@@ -190,13 +157,9 @@ class UserController extends Controller
     /**
      * Смена роли пользователя (быстрое действие для админа)
      */
-    public function changeRole(Request $request, User $user)
+    public function changeRole(ChangeRoleRequest $request, User $user)
     {
-        $data = $request->validate([
-            'role' => 'required|in:participant,jury,admin',
-        ]);
-
-        $user->update($data);
+        $user->update($request->validated());
 
         return response()->json([
             'success' => true,
@@ -213,8 +176,6 @@ class UserController extends Controller
             return back()->with('error', 'Нельзя заблокировать самого себя');
         }
 
-        // Здесь можно добавить поле blocked_at в миграцию
-        // $user->update(['blocked_at' => $user->blocked_at ? null : now()]);
 
         return back()->with('success', 'Статус пользователя изменен');
     }

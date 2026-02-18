@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Http\Requests\Notification\UpdateSettingsRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -201,18 +202,10 @@ class NotificationController extends Controller
     /**
      * Сохранить настройки уведомлений
      */
-    public function updateSettings(Request $request)
+    public function updateSettings(UpdateSettingsRequest $request)
     {
-        $data = $request->validate([
-            'email_on_status_change' => 'boolean',
-            'email_on_comments' => 'boolean',
-            'email_on_deadline' => 'boolean',
-            'push_notifications' => 'boolean',
-            'digest_frequency' => 'in:never,daily,weekly,monthly',
-        ]);
-
         $user = Auth::user();
-        $user->updateNotificationSettings($data);
+        $user->updateNotificationSettings($request->validated());
 
         return redirect()->route('notifications.settings')
             ->with('success', 'Настройки уведомлений сохранены');
