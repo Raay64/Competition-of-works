@@ -114,7 +114,33 @@ class DashboardController extends Controller
             abort(403);
         }
 
-        // Детальная статистика для админов и жюри
+        // Основная статистика как в админке
+        $stats = [
+            'total_users' => User::count(),
+            'users_by_role' => [
+                'participant' => User::where('role', 'participant')->count(),
+                'jury' => User::where('role', 'jury')->count(),
+                'admin' => User::where('role', 'admin')->count(),
+            ],
+            'total_contests' => Contest::count(),
+            'active_contests' => Contest::where('is_active', true)->count(),
+            'total_submissions' => Submission::count(),
+            'submissions_by_status' => [
+                'draft' => Submission::where('status', 'draft')->count(),
+                'submitted' => Submission::where('status', 'submitted')->count(),
+                'needs_fix' => Submission::where('status', 'needs_fix')->count(),
+                'accepted' => Submission::where('status', 'accepted')->count(),
+                'rejected' => Submission::where('status', 'rejected')->count(),
+            ],
+        ];
+
+        // Для обратной совместимости со старыми переменными
+        $users_total = $stats['total_users'];
+        $contests_total = $stats['total_contests'];
+        $submissions_total = $stats['total_submissions'];
+        $submissions_by_status = $stats['submissions_by_status'];
+
+        // Детальная статистика для графиков
         $submissions_by_day = Submission::selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->where('created_at', '>=', now()->subDays(30))
             ->groupBy('date')
@@ -130,10 +156,26 @@ class DashboardController extends Controller
             ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_hours')
             ->first();
 
+        // Активные пользователи за последние 7 дней
+        $active_users = User::whereHas('submissions', function($q) {
+            $q->where('created_at', '>=', now()->subDays(7));
+        })->count();
+
+        // Подсчет файлов - показываем количество работ (временное решение)
+        // TODO: исправить после выяснения структуры БД
+        $attachments_total = Submission::count();
+
         return view('dashboard.statistics', compact(
+            'stats',
+            'users_total',
+            'contests_total',
+            'submissions_total',
+            'attachments_total',
+            'submissions_by_status',
             'submissions_by_day',
             'submissions_by_contest',
-            'avg_response_time'
+            'avg_response_time',
+            'active_users'
         ));
     }
 }
