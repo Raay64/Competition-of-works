@@ -156,13 +156,10 @@ class DashboardController extends Controller
             ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_hours')
             ->first();
 
-        // Активные пользователи за последние 7 дней
         $active_users = User::whereHas('submissions', function($q) {
             $q->where('created_at', '>=', now()->subDays(7));
         })->count();
 
-        // Подсчет файлов - показываем количество работ (временное решение)
-        // TODO: исправить после выяснения структуры БД
         $attachments_total = Submission::count();
 
         return view('dashboard.statistics', compact(
